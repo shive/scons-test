@@ -1,0 +1,368 @@
+﻿# -*- mode: python; coding: utf-8-with-signature-unix -*-
+#==============================================================================
+
+import sys
+import os
+import itertools
+
+
+#------------------------------------------------------------------------------
+def find_files(
+        targetdir = '.',
+        extensions = ('.c', '.cpp', '.h', '.hpp', '.inl'),
+        ):
+    """ファイル検索"""
+    source_files = []
+    for root, dirs, files in os.walk(targetdir):
+        dirs[:] = [s for s in dirs if not s.startswith('.')]
+        root = os.path.abspath(root)
+        files = [os.path.join(root, s) for s in files
+                 if os.path.splitext(s)[1] in extensions]
+        source_files.append(files)
+    source_files = itertools.chain.from_iterable(source_files)
+    source_files = list(source_files)
+    return source_files
+
+
+#------------------------------------------------------------------------------
+def make_build(
+        product_name,
+
+        srcdir = '.',
+        incdirs = None,
+        defines = None,
+        libdirs = None,
+        libs    = None,
+        depends = None,
+        intdir  = None,
+        outdir  = None,
+        decider = None,
+        toolset = None,
+
+        ### for msvc
+        msvc_version   = None,
+        msvc_pch       = None,
+        msvc_arch      = None,
+        msvc_subsystem = None,
+        msvc_projguid  = None,
+
+        ):
+    """buildターゲットを設定"""
+
+    assert sys.platform in ('win32',), 'not supported platform <%s>' % sys.platform
+
+    ### デフォルト値を指定
+    toolset = toolset or 'msvc'
+    decider = decider or 'MD5'
+    msvc_version = msvc_version or '10.0'
+    msvc_arch = msvc_arch or 'x86'
+    msvc_subsystem = msvc_subsystem or 'console'
+
+    incdirs = incdirs or []
+    defines = defines or []
+    libdirs = libdirs or []
+    libs = libs or []
+    depends = depends or []
+
+    ### 指定エラーをチェック
+    assert decider in ('MD5', 'make')
+    assert msvc_version in ('9.0', '10.0', '11.0')
+    assert msvc_arch in ('x86', 'x64')
+    assert msvc_subsystem in ('console', 'windows')
+
+    ### 必要な変数を合成
+    if 'msvc' == toolset:
+        msvc_arch_alias = msvc_arch.replace('x86_64', 'x64').replace('x86', 'win32')
+        platform_name = msvc_arch_alias + 'vc' + msvc_version.partition('.')[0]
+    else:
+        platform_name = 'mingw32'
+    target_name = '-'.join([product_name, platform_name, '${CONFIGURATION}'])
+    intdir = (intdir and os.path.join(intdir, target_name)) or ('./obj/' + target_name)
+    outdir = outdir or './bin'
+
+    ### 絶対パス変換
+    srcdir = os.path.abspath(srcdir)
+    incdirs = [os.path.abspath(s) for s in incdirs]
+    libdirs = [os.path.abspath(s) for s in libdirs]
+    intdir = os.path.abspath(intdir)
+    outdir = os.path.abspath(outdir)
+    if not os.path.isdir(outdir):
+        os.makedirs(outdir)
+
+    ### ソースファイルを列挙
+    sources = find_files(targetdir = srcdir)
+    compile_sources = [s.replace(srcdir, intdir) for s in sources
+                       if os.path.splitext(s)[1] in ('.c', '.cpp')]
+
+    ### 出力パスを合成
+    target_path = os.path.join(outdir, target_name)
+    pdb_path = target_path + '.pdb'
+    map_path = target_path + '.map'
+    target_path += '.exe'
+
+    ### MinGWでビルド
+    if toolset in ('mingw', 'gcc', 'g++'):
+
+        ### ビルドターゲットを作成開始
+        env = Environment(
+            tools = (toolset,),
+            )
+        env.Decider(decider)
+
+        env.Append(
+            CCFLAGS = [
+                '-g',
+                ],
+            )
+
+        ### ビルド構成ごとの設定
+        for configure in ('Debug', 'Release'):
+            env_build = env.Clone(
+                CONFIGURATION = configure.lower(),
+                )
+            env_build.VariantDir(intdir, srcdir, duplicate=0)
+
+            ### デバッグビルド
+            if 'Debug' == configure:
+                env_build.Append(
+                    CCFLAGS = [
+                        '-O0',
+                        ],
+                    CPPDEFINES = [
+                        '_DEBUG',
+                        ],
+                    )
+
+            ### リリースビルド
+            elif 'Release' == configure:
+                env_build.Append(
+                    CCFLAGS = [
+                        '-O2',
+                        ],
+                    CPPDEFINES = [
+                        'NDEBUG',
+                        ],
+                    )
+
+            ### ビルド
+            target = env_build.Program(target_path, compile_sources)
+            env_build.Clean(target, [intdir])
+
+            ### ビルドターゲットのエイリアス設定
+            build_configuration = env_build.Alias(
+                'build-${CONFIGURATION}', target_path)
+            env_build.Alias('build', build_configuration)
+
+            ### 実行ターゲット
+            env_build.Command(
+                'run-${CONFIGURATION}', build_configuration, target_path)
+
+    ### VisualStudioでビルド
+    elif toolset in ('msvc',):
+
+        ### ビルドターゲットを作成開始
+        env = Environment(
+            tools = ('default', toolset),
+            TARGET_ARCH = msvc_arch.replace('x64', 'x86_64'),
+            MSVC_VERSION = msvc_version,
+            )
+        env.Decider(decider)
+
+        ### コンパイルの基本設定
+        env.Append(
+            CCFLAGS = [
+                '/Zi',
+
+                '/W4',
+                '/WX',
+
+                '/MP',
+                '/GF',
+                '/Gm-',
+                '/GS-',
+                '/Gy',
+                # '/arch:SSE2',
+                '/fp:fast',
+                '/fp:except-',
+                '/Zc:wchar_t',
+                '/Zc:forScope',
+                '/openmp',
+                '/FC',
+                '/Zm150',
+                ],
+            CPPDEFINES = [
+                '_SCL_SECURE_NO_WARNINGS',
+                '_CRT_SECURE_NO_WARNINGS',
+                '_MBCS',
+                '_WINDOWS',
+                'WIN32',
+                ],
+            LINKFLAGS = [
+                '/INCREMENTAL:NO',
+                '/SUBSYSTEM:' + msvc_subsystem.upper(),
+                '/NODEFAULTLIB:LIBCMT',
+                '/NODEFAULTLIB:LIBCMTD',
+                '/MAP',
+                '/OPT:REF',
+                '/OPT:ICF',
+                ],
+            LIBS = [
+                'kernel32',
+                'user32',
+                'gdi32',
+                'winspool',
+                'comdlg32',
+                'advapi32',
+                'shell32',
+                'ole32',
+                'oleaut32',
+                'uuid',
+                'odbc32',
+                'odbccp32',
+                'winmm',
+                'ws2_32',
+                'opengl32',
+                ],
+            )
+
+        ### コンパイルの拡張設定
+        env.Append(
+            CPPPATH = map(os.path.relpath, incdirs),
+            CPPDEFINES = defines,
+            CCFLAGS = [
+                '/EHsc',
+                '/GR-',
+                '/wd4127',
+                '/wd4512',
+                '/wd4100',
+                '/wd4481',
+                '/wd4239',
+                '/Fd' + pdb_path,
+                ],
+            LIBPATH = libdirs,
+            LIBS = libs,
+            )
+
+        ### ビルド構成ごとの設定
+        for configure in ('Debug', 'Release'):
+            env_build = env.Clone(
+                CONFIGURATION = configure.lower(),
+                )
+            env_build.VariantDir(intdir, srcdir, duplicate=0)
+
+            ### デバッグビルド
+            if 'Debug' == configure:
+                env_build.Append(
+                    CCFLAGS = [
+                        '/Od',
+                        '/Ob1',
+                        '/Oy-',
+                        '/MDd',
+                        ],
+                    CPPDEFINES = [
+                        '_DEBUG',
+                        ],
+                    LINKFLAGS = [
+                        '/DEBUG',
+                        ],
+                    )
+
+            ### リリースビルド
+            elif 'Release' == configure:
+                env_build.Append(
+                    CCFLAGS = [
+                        '/O2',
+                        '/Ob2',
+                        '/MD',
+                        ],
+                    CPPDEFINES = [
+                        'NDEBUG',
+                        ],
+                    LINKFLAGS = [
+                        '/DEBUG',
+                        ],
+                    )
+
+            ### C compile
+            env_build_c = env_build.Clone()
+            compile_sources_c = [env_build_c.Object(s) for s in compile_sources
+                                 if os.path.splitext(s)[1] == '.c']
+
+            ### C++ compile
+            compile_sources_cpp = [s for s in compile_sources
+                                   if os.path.splitext(s)[1] == '.cpp']
+
+            ### プリコンパイルヘッダ
+            if msvc_pch:
+                msvc_pch_cpp, msvc_pch_h = msvc_pch
+                msvc_pch_pch, msvc_pch_obj = env_build.PCH(
+                    os.path.join(intdir, msvc_pch_cpp),
+                    )
+                env_build.Append(
+                    PCHSTOP = msvc_pch_h,
+                    PCH = msvc_pch_pch,
+                    CCFLAGS = ['/FI' + msvc_pch_h],
+                    )
+                msvc_pch_cpp = os.path.sep + os.path.normpath(msvc_pch_cpp)
+                compile_sources_cpp = [
+                    s for s in compile_sources_cpp
+                    if not os.path.normpath(s).endswith(msvc_pch_cpp)]
+
+            ### ビルドターゲット
+            target = env_build.Program(
+                target_path, compile_sources_cpp + compile_sources_c + depends)
+            ### クリーン対象ファイル追加
+            env_build.Clean(
+                target, [intdir, pdb_path, map_path])
+
+            ### ビルドターゲットのエイリアス設定
+            build_configuration = env_build.Alias(
+                'build-${CONFIGURATION}', target_path)
+            env_build.Alias('build', build_configuration)
+            env_build.Alias(
+                '-'.join(['build', configure]), build_configuration)
+
+            ### 実行ターゲット
+            env_build.Command(
+                'run-${CONFIGURATION}', build_configuration, target_path)
+
+        ### VisualStudioプロジェクト出力
+        if '9.0' == msvc_version:
+            msvc_configuration_key = '$(ConfigurationName)'
+        else:
+            msvc_configuration_key = '$(Configuration)'
+        msvc_scons = 'scons -Qj4 msvc_version=%s msvc_arch=%s msvc_subsystem=%s build-%s'
+        msvc_scons = msvc_scons % (msvc_version, msvc_arch, msvc_subsystem, msvc_configuration_key)
+        msvc_project_name = '-'.join([product_name, platform_name])
+        msvc_project = env.MSVSProject(
+            target = msvc_project_name + '${MSVSPROJECTSUFFIX}',
+            srcs = map(os.path.relpath, sources),
+            buildtarget = os.path.relpath(
+                target_path.replace('${CONFIGURATION}', msvc_configuration_key),
+                ),
+            variant = ('Debug|' + msvc_arch_alias, 'Release|' + msvc_arch_alias),
+            auto_build_solution = 0,
+            MSVSSCONSCOM = msvc_scons,
+            MSVS_PROJECT_GUILD = msvc_projguid,
+            )
+        ### クリーン対象ファイルの追加
+        env.Clean(
+            msvc_project,
+            env.Glob(msvc_project_name + '.*'),
+            )
+        ### 勝手にビルドされないように追加
+        env.Ignore('.', msvc_project + env.Alias('msvcproj', msvc_project))
+
+
+#------------------------------------------------------------------------------
+make_build(
+    'test',
+
+    toolset = ARGUMENTS.get('toolset'),
+
+    msvc_version   = ARGUMENTS.get('msvc_version'),
+    msvc_arch      = ARGUMENTS.get('msvc_arch'),
+    msvc_subsystem = ARGUMENTS.get('msvc_subsystem'),
+    msvc_pch       = ('stdafx.cpp', 'stdafx.h'),
+    )
+

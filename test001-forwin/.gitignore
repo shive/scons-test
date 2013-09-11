@@ -1,0 +1,8 @@
+/obj/
+/bin/
+/Debug/
+/Release/
+/x64/
+*.vcproj
+*.vcxproj
+*.filters

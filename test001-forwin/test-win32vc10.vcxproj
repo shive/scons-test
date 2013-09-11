@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<ItemGroup Label="ProjectConfigurations">
+		<ProjectConfiguration Include="Debug|win32">
+			<Configuration>Debug</Configuration>
+			<Platform>win32</Platform>
+		</ProjectConfiguration>
+		<ProjectConfiguration Include="Release|win32">
+			<Configuration>Release</Configuration>
+			<Platform>win32</Platform>
+		</ProjectConfiguration>
+	</ItemGroup>
+	<PropertyGroup Label="Globals">
+		<ProjectGuid>{F1F88B5E-BD38-C427-1887-826A4E16571D}</ProjectGuid>
+		<RootNamespace>test-win32vc10</RootNamespace>
+		<Keyword>MakeFileProj</Keyword>
+	</PropertyGroup>
+	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|win32'" Label="Configuration">
+		<ConfigurationType>Makefile</ConfigurationType>
+		<UseOfMfc>false</UseOfMfc>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|win32'" Label="Configuration">
+		<ConfigurationType>Makefile</ConfigurationType>
+		<UseOfMfc>false</UseOfMfc>
+	</PropertyGroup>
+	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+	<ImportGroup Label="ExtensionSettings">
+	</ImportGroup>
+	<ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|win32'" Label="PropertySheets">
+		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+	</ImportGroup>
+	<ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|win32'" Label="PropertySheets">
+		<Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+	</ImportGroup>
+	<PropertyGroup Label="UserMacros" />
+	<PropertyGroup>
+	<_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+		<NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">echo Starting SCons &amp;&amp; scons -Qj4 msvc_version=10.0 msvc_arch=x86 msvc_subsystem=console build-$(Configuration) &quot;bin\test-win32vc10-$(Configuration).exe&quot;</NMakeBuildCommandLine>
+		<NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">echo Starting SCons &amp;&amp; scons -Qj4 msvc_version=10.0 msvc_arch=x86 msvc_subsystem=console build-$(Configuration) &quot;bin\test-win32vc10-$(Configuration).exe&quot;</NMakeReBuildCommandLine>
+		<NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">echo Starting SCons &amp;&amp; scons -Qj4 msvc_version=10.0 msvc_arch=x86 msvc_subsystem=console build-$(Configuration) -c &quot;bin\test-win32vc10-$(Configuration).exe&quot;</NMakeCleanCommandLine>
+		<NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">bin\test-win32vc10-$(Configuration).exe</NMakeOutput>
+		<NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_MBCS;_WINDOWS;WIN32</NMakePreprocessorDefinitions>
+		<NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|win32'"></NMakeIncludeSearchPath>
+		<NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+		<NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+		<NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+		<NMakeBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|win32'">echo Starting SCons &amp;&amp; scons -Qj4 msvc_version=10.0 msvc_arch=x86 msvc_subsystem=console build-$(Configuration) &quot;bin\test-win32vc10-$(Configuration).exe&quot;</NMakeBuildCommandLine>
+		<NMakeReBuildCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|win32'">echo Starting SCons &amp;&amp; scons -Qj4 msvc_version=10.0 msvc_arch=x86 msvc_subsystem=console build-$(Configuration) &quot;bin\test-win32vc10-$(Configuration).exe&quot;</NMakeReBuildCommandLine>
+		<NMakeCleanCommandLine Condition="'$(Configuration)|$(Platform)'=='Release|win32'">echo Starting SCons &amp;&amp; scons -Qj4 msvc_version=10.0 msvc_arch=x86 msvc_subsystem=console build-$(Configuration) -c &quot;bin\test-win32vc10-$(Configuration).exe&quot;</NMakeCleanCommandLine>
+		<NMakeOutput Condition="'$(Configuration)|$(Platform)'=='Release|win32'">bin\test-win32vc10-$(Configuration).exe</NMakeOutput>
+		<NMakePreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|win32'">_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_MBCS;_WINDOWS;WIN32</NMakePreprocessorDefinitions>
+		<NMakeIncludeSearchPath Condition="'$(Configuration)|$(Platform)'=='Release|win32'"></NMakeIncludeSearchPath>
+		<NMakeForcedIncludes Condition="'$(Configuration)|$(Platform)'=='Release|win32'">$(NMakeForcedIncludes)</NMakeForcedIncludes>
+		<NMakeAssemblySearchPath Condition="'$(Configuration)|$(Platform)'=='Release|win32'">$(NMakeAssemblySearchPath)</NMakeAssemblySearchPath>
+		<NMakeForcedUsingAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|win32'">$(NMakeForcedUsingAssemblies)</NMakeForcedUsingAssemblies>
+	</PropertyGroup>
+	<ItemGroup>
+		<ClCompile Include="main.cpp" />
+		<ClCompile Include="stdafx.cpp" />
+		<ClCompile Include="stdafx.h" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="SConstruct" />
+	</ItemGroup>
+	<Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+	<ImportGroup Label="ExtensionTargets">
+	</ImportGroup>
+</Project>
+<!-- SCons Data:
+fXEBKFULRGVidWd8d2luMzJxAmNjb3B5X3JlZwpfcmVjb25zdHJ1Y3RvcgpxAyhjU0NvbnMuVG9v
+bC5tc3ZzCkNvbmZpZwpxBGNfX2J1aWx0aW5fXwpvYmplY3QKcQVOdFJxBn1xByhVB3ZhcmlhbnRx
+CFUFRGVidWdVB2NtZGFyZ3NxCVUAVQhwbGF0Zm9ybXEKVQV3aW4zMnELVQdydW5maWxlcQxVJ2Jp
+blx0ZXN0LXdpbjMydmMxMC0kKENvbmZpZ3VyYXRpb24pLmV4ZXENVQtidWlsZHRhcmdldHEOaA1V
+Bm91dGRpcnEPVQB1YlUNUmVsZWFzZXx3aW4zMnEQaAMoaARoBU50UnERfXESKGgIVQdSZWxlYXNl
+cRNoCVUAaApVBXdpbjMycRRoDGgNaA5oDWgPVQB1YnUu
+
+fXEBKFULT3RoZXIgRmlsZXNxAl1VDUxvY2FsIEhlYWRlcnNxA11VDEhlYWRlciBGaWxlc3EEXVUM
+U291cmNlIEZpbGVzcQVdcQYoVQhtYWluLmNwcHEHVQpzdGRhZnguY3BwcQhVCHN0ZGFmeC5ocQll
+VQ5SZXNvdXJjZSBGaWxlc3EKXXUu
+-->
